@@ -19,7 +19,7 @@ cd api-gateway
 ```
 ### Backend Setup
 
-1. Create a conda virtual environment for the Python backend:
+1. Create a virtual environment for the Python backend:
 ```bash
 python -m venv venv
 ```
