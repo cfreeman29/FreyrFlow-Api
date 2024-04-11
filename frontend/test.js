@@ -1,14 +1,14 @@
-const MongoClient = require('mongodb').MongoClient;
-const mongoURL = 'mongodb://localhost:3101';
+const express = require('express');
+const app = express();
 
-MongoClient.connect(mongoURL)
-  .then((client) => {
-    console.log('Connected to MongoDB');
-    const db = client.db('api_gateway');
-    const usersCollection = db.collection('users');
-    // ...
-  })
-  .catch((err) => {
-    console.error('Error connecting to MongoDB:', err);
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
+
+app.listen(8000, (err) => {
+  if (err) {
+    console.error('Error starting the server:', err);
     process.exit(1);
-  });
+  }
+  console.log('Server listening on port 8000');
+});
