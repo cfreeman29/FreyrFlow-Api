@@ -83,6 +83,18 @@ node app.js
 
 The frontend server will run on `http://localhost:8000`.
 
+
+## Configuration
+
+### MongoDB
+The API gateway uses MongoDB to persist the API configurations. You can customize the MongoDB connection details by modifying the following constants in the `config.py` file:
+
+- `MONGODB_URI`: The URI of the MongoDB server (default: 'mongodb://localhost:27017').
+- `MONGODB_DB`: The name of the MongoDB database (default: 'api_gateway').
+- `MONGODB_COLLECTION`: The name of the MongoDB collection to store the API configurations (default: 'api_configs').
+
+Make sure to update these constants according to your MongoDB setup before running the API gateway.
+
 ## Usage
 
 1. Open a web browser and navigate to `http://localhost:8000`.
