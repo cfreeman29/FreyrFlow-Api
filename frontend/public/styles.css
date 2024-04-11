@@ -53,3 +53,20 @@ body {
   .btn:hover {
     background-color: #45a049;
   }
+
+.error-message {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.logout-link {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  color: #333;
+  text-decoration: none;
+}
+
+.logout-link:hover {
+  text-decoration: underline;
+}
