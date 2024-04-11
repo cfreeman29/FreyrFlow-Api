@@ -5,12 +5,16 @@ const session = require('express-session');
 const MongoClient = require('mongodb').MongoClient;
 const bcrypt = require('bcrypt');
 
+
+const crypto = require('crypto');
+const secretKey = crypto.randomBytes(32).toString('hex');
+
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 app.use(session({
-  secret: 'your-secret-key',
+  secret: secretKey,
   resave: false,
   saveUninitialized: false
 }));
@@ -19,17 +23,14 @@ app.use(session({
 const mongoURL = 'mongodb://localhost:3101';
 
 // Connect to MongoDB
-MongoClient.connect(mongoURL, { useUnifiedTopology: true }, (err, client) => {
-  if (err) {
-    console.error('Error connecting to MongoDB:', err);
-    return;
-  }
-
-  console.log('Connected to MongoDB');
-  const db = client.db('api_gateway');
-  const usersCollection = db.collection('users');
+MongoClient.connect(mongoURL)
+  .then((client) => {
+    console.log('Connected to MongoDB');
+    const db = client.db('api_gateway');
+    const usersCollection = db.collection('users');
 
   app.get('/', (req, res) => {
+    console.log('GET / route');
     if (req.session.user) {
       // User is logged in, render the configuration page
       res.send(`
@@ -93,6 +94,7 @@ MongoClient.connect(mongoURL, { useUnifiedTopology: true }, (err, client) => {
   });
 
   app.post('/login', (req, res) => {
+    console.log('POST /login route');
     const { username, password } = req.body;
 
     // Check if the admin user exists in the database
@@ -175,6 +177,7 @@ MongoClient.connect(mongoURL, { useUnifiedTopology: true }, (err, client) => {
   });
 
   app.post('/create-password', (req, res) => {
+    console.log('POST /create-password route');
     const { password } = req.body;
 
     // Hash the password
@@ -200,6 +203,7 @@ MongoClient.connect(mongoURL, { useUnifiedTopology: true }, (err, client) => {
   });
 
   app.get('/logout', (req, res) => {
+    console.log('GET /logout route');
     // Destroy the session and redirect to the login page
     req.session.destroy((err) => {
       if (err) {
@@ -210,6 +214,7 @@ MongoClient.connect(mongoURL, { useUnifiedTopology: true }, (err, client) => {
   });
 
   app.post('/configure', (req, res) => {
+    console.log('POST /configure route');
     if (req.session.user) {
       const { path, endpoint, bearer_token } = req.body;
 
@@ -231,7 +236,14 @@ MongoClient.connect(mongoURL, { useUnifiedTopology: true }, (err, client) => {
     }
   });
 
-  app.listen(8000, () => {
+  console.log('Starting server...');
+
+  app.listen(8000, (err) => {
+    if (err) {
+      console.error('Error starting the server:', err);
+      process.exit(1); // Exit the process if unable to start the server
+    }
     console.log('Frontend server is running on port 8000');
   });
+  console.log('Server startup complete');
 });
