@@ -44,6 +44,32 @@ python app.py
 ```
 The backend server will run on `http://localhost:3000`.
 
+### Backend Setup (Alternative: Using conda)
+
+1. Install Miniconda or Anaconda if you haven't already. You can download the appropriate version for your operating system from the official Miniconda or Anaconda website.
+
+2. Open a terminal or command prompt.
+
+3. Create a new conda environment for the project:
+```bash
+conda create --name api-gateway python=3.x
+```
+Replace `3.x` with the desired Python version (e.g., `3.9`).
+
+4. Activate the conda environment:
+```bash
+conda activate api-gateway
+```
+5. Install the required Python packages:
+```bash
+pip install flask flask-cors requests
+```
+6. Start the backend server:
+```bash
+python app.py
+```
+The backend server will run on `http://localhost:3000`.
+
 ### Frontend Setup
 
 1. Navigate to the `frontend` directory:
