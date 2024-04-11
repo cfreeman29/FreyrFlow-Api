@@ -16,8 +16,8 @@ app.get('/', (req, res) => {
       <label for="endpoint">API Endpoint:</label>
       <input type="text" id="endpoint" name="endpoint" required><br>
       
-      <label for="bearerToken">Bearer Token:</label>
-      <input type="text" id="bearerToken" name="bearer_token" required><br>
+      <label for="bearerToken">Bearer Token (optional):</label>
+      <input type="text" id="bearerToken" name="bearer_token"><br>
       
       <button type="submit">Add Configuration</button>
     </form>
