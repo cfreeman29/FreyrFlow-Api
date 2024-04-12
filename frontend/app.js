@@ -33,13 +33,83 @@ MongoClient.connect(mongoURL)
         .then(user => {
           if (req.session.user) {
             // User is logged in, render the configuration page
-            res.send(`<!DOCTYPE html><html><head><title>API Gateway Configuration</title><link rel="stylesheet" type="text/css" href="/styles.css"></head><body><div class="container"><h1>API Gateway Configuration</h1><form id="configForm" action="/configure" method="post"><div class="form-group"><label for="path">Path:</label><input type="text" id="path" name="path" required></div><div class="form-group"><label for="endpoint">API Endpoint:</label><input type="text" id="endpoint" name="endpoint" required></div><div class="form-group"><label for="bearerToken">Bearer Token (optional):</label><input type="text" id="bearerToken" name="bearer_token"></div><button type="submit" class="btn">Add Configuration</button></form><a href="/logout" class="logout-link">Logout</a></div></body></html>`);
+            // res.send(`<!DOCTYPE html><html><head><title>API Gateway Configuration</title><link rel="stylesheet" type="text/css" href="/styles.css"></head><body><div class="container"><h1>API Gateway Configuration</h1><form id="configForm" action="/configure" method="post"><div class="form-group"><label for="path">Path:</label><input type="text" id="path" name="path" required></div><div class="form-group"><label for="endpoint">API Endpoint:</label><input type="text" id="endpoint" name="endpoint" required></div><div class="form-group"><label for="bearerToken">Bearer Token (optional):</label><input type="text" id="bearerToken" name="bearer_token"></div><button type="submit" class="btn">Add Configuration</button></form><a href="/logout" class="logout-link">Logout</a></div></body></html>`);
+            res.send(`
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <title>Login</title>
+                  <link rel="stylesheet" type="text/css" href="/styles.css">
+              </head>
+              <body>
+                <div class="container">
+                  <h1>Login</h1>
+                  <form id="loginForm" action="/login" method="post">
+                    <div class="form-group">
+                      <label for="username">Username:</label>
+                      <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="password">Password:</label>
+                      <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                  </form>
+                </div>
+              </body>
+            </html>
+          `);
           } else if (!user) {
             // Admin user doesn't exist, render the create password page
-            res.send(`<!DOCTYPE html><html><head><title>Create Password</title><link rel="stylesheet" type="text/css" href="/styles.css"></head><body><div class="container"><h1>Create Password</h1><p>Please create a password for the admin user.</p><form id="createPasswordForm" action="/create-password" method="post"><div class="form-group"><label for="password">Password:</label><input type="password" id="password" name="password" required></div><button type="submit" class="btn">Create Password</button></form></div></body></html>`);
+            res.send(`
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <title>Create Password</title>
+                  <link rel="stylesheet" type="text/css" href="/styles.css">
+                </head>
+                <body>
+                  <div class="container">
+                    <h1>Create Password</h1>
+                    <p>Please create a password for the admin user.</p>
+                    <form id="createPasswordForm" action="/create-password" method="post">
+                      <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required> 
+                      </div>
+                      <button type="submit" class="btn">Create Password</button>
+                    </form>
+                  </div>
+                </body>
+              </html>
+            `);
           } else {
             // Admin user exists, render the login page
-            res.send(`<!DOCTYPE html><html><head><title>Login</title><link rel="stylesheet" type="text/css" href="/styles.css"></head><body><div class="container"><h1>Login</h1><form id="loginForm" action="/login" method="post"><div class="form-group"><label for="username">Username:</label><input type="text" id="username" name="username" required></div><div class="form-group"><label for="password">Password:</label><input type="password" id="password" name="password" required></div><button type="submit" class="btn">Login</button></form></div></body></html>`);
+            res.send(`
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <title>Login</title>
+                  <link rel="stylesheet" type="text/css" href="/styles.css">
+                </head>
+                <body>
+                  <div class="container">
+                    <h1>Login</h1>
+                    <form id="loginForm" action="/login" method="post">
+                      <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required>
+                      </div>
+                      <button type="submit" class="btn">Login</button>
+                    </form>
+                  </div>
+                </body>
+              </html>
+            `);
           }
         })
         .catch(err => {
