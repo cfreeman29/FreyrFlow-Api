@@ -36,35 +36,22 @@ MongoClient.connect(mongoURL)
           if (req.session.user) {
             // User is logged in, render the configuration page
             res.send(`
-              <!DOCTYPE html>
-              <html>
-                <head>
-                  <title>API Gateway Configuration</title>
-                  <link rel="stylesheet" type="text/css" href="/styles.css">
-                </head>
-                <body>
-                  ${fs.readFileSync('navbar.html')}
-                  <div class="container">
-                    <h1>API Gateway Configuration</h1>
-                    <form id="configForm" action="/configure" method="post">
-                      <div class="form-group">
-                        <label for="path">Path:</label>
-                        <input type="text" id="path" name="path" required>
-                      </div>
-                      <div class="form-group">
-                        <label for="endpoint">API Endpoint:</label>
-                        <input type="text" id="endpoint" name="endpoint" required>
-                      </div>
-                      <div class="form-group">
-                        <label for="bearerToken">Bearer Token (optional):</label>
-                        <input type="text" id="bearerToken" name="bearer_token">
-                      </div>
-                      <button type="submit" class="btn">Add Configuration</button>
-                    </form>
-                  </div>
-                </body>
-              </html>
-            `);
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>API Gateway - Welcome</title>
+              <link rel="stylesheet" type="text/css" href="/styles.css">
+            </head>
+            <body>
+              ${fs.readFileSync('navbar.html')}
+              <div class="container">
+                <h1>Welcome to the API Gateway</h1>
+                <p>Welcome to the API Gateway! Here you can manage your API routes and configurations.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `);
           } else if (!user) {
             // Admin user doesn't exist, render the create password page
             res.send(`
@@ -125,7 +112,45 @@ MongoClient.connect(mongoURL)
           res.status(500).send('Internal Server Error');
         });
     });
-            
+    
+    app.get('/configure-route', (req, res) => {
+      console.log('GET /configure-route route');
+      if (req.session.user) {
+        res.send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>API Gateway Configuration</title>
+            <link rel="stylesheet" type="text/css" href="/styles.css">
+          </head>
+          <body>
+            ${fs.readFileSync('navbar.html')}
+            <div class="container">
+              <h1>API Gateway Configuration</h1>
+              <form id="configForm" action="/configure" method="post">
+                <div class="form-group">
+                  <label for="path">Path:</label>
+                  <input type="text" id="path" name="path" required>
+                </div>
+                <div class="form-group">
+                  <label for="endpoint">API Endpoint:</label>
+                  <input type="text" id="endpoint" name="endpoint" required>
+                </div>
+                <div class="form-group">
+                  <label for="bearerToken">Bearer Token (optional):</label>
+                  <input type="text" id="bearerToken" name="bearer_token">
+                </div>
+                <button type="submit" class="btn">Add Configuration</button>
+              </form>
+            </div>
+          </body>
+        </html>
+      `);
+      } else {
+        res.redirect('/');
+      }
+    });
+
     app.get('/routes', (req, res) => {
       console.log('GET /routes route');
       if (req.session.user) {
@@ -145,7 +170,10 @@ MongoClient.connect(mongoURL)
               <body>
                 ${fs.readFileSync('navbar.html')}
                 <div class="container">
-                  <h1>API Routes</h1>
+                  <div class="header">
+                    <h1>API Routes</h1>
+                    <button id="toggleTokensBtn">Unhide Tokens</button>
+                  </div>
                   <table>
                     <thead>
                       <tr>
@@ -159,12 +187,32 @@ MongoClient.connect(mongoURL)
                         <tr class="${index % 2 === 0 ? 'even' : 'odd'}">
                           <td>${config.path}</td>
                           <td>${config.endpoint}</td>
-                          <td>${config.bearer_token || ''}</td>
+                          <td class="bearer-token-cell">
+                            <span class="hidden-token">************</span>
+                            <span class="visible-token">${config.bearer_token || ''}</span>
+                          </td>
                         </tr>
                       `).join('')}
                     </tbody>
                   </table>
                 </div>
+                <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                    const toggleTokensBtn = document.getElementById('toggleTokensBtn');
+                    const hiddenTokens = document.querySelectorAll('.hidden-token');
+                    const visibleTokens = document.querySelectorAll('.visible-token');
+    
+                    toggleTokensBtn.addEventListener('click', function() {
+                      hiddenTokens.forEach(function(token) {
+                        token.classList.toggle('hidden');
+                      });
+                      visibleTokens.forEach(function(token) {
+                        token.classList.toggle('hidden');
+                      });
+                      toggleTokensBtn.textContent = toggleTokensBtn.textContent === 'Unhide Tokens' ? 'Hide Tokens' : 'Unhide Tokens';
+                    });
+                  });
+                </script>
               </body>
               </html>
               `;
