@@ -6,6 +6,7 @@ const MongoClient = require('mongodb').MongoClient;
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const secretKey = crypto.randomBytes(32).toString('hex');
+const fs = require('fs');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -26,6 +27,7 @@ MongoClient.connect(mongoURL)
     console.log('Connected to MongoDB');
     const db = client.db('api_gateway');
     const usersCollection = db.collection('users');
+    const api_configs_collection = db.collection('api_configs');
 
     app.get('/', (req, res) => {
       console.log('GET / route');
@@ -33,32 +35,36 @@ MongoClient.connect(mongoURL)
         .then(user => {
           if (req.session.user) {
             // User is logged in, render the configuration page
-            // res.send(`<!DOCTYPE html><html><head><title>API Gateway Configuration</title><link rel="stylesheet" type="text/css" href="/styles.css"></head><body><div class="container"><h1>API Gateway Configuration</h1><form id="configForm" action="/configure" method="post"><div class="form-group"><label for="path">Path:</label><input type="text" id="path" name="path" required></div><div class="form-group"><label for="endpoint">API Endpoint:</label><input type="text" id="endpoint" name="endpoint" required></div><div class="form-group"><label for="bearerToken">Bearer Token (optional):</label><input type="text" id="bearerToken" name="bearer_token"></div><button type="submit" class="btn">Add Configuration</button></form><a href="/logout" class="logout-link">Logout</a></div></body></html>`);
             res.send(`
               <!DOCTYPE html>
               <html>
                 <head>
-                  <title>Login</title>
+                  <title>API Gateway Configuration</title>
                   <link rel="stylesheet" type="text/css" href="/styles.css">
-              </head>
-              <body>
-                <div class="container">
-                  <h1>Login</h1>
-                  <form id="loginForm" action="/login" method="post">
-                    <div class="form-group">
-                      <label for="username">Username:</label>
-                      <input type="text" id="username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                      <label for="password">Password:</label>
-                      <input type="password" id="password" name="password" required>
-                    </div>
-                    <button type="submit" class="btn">Login</button>
-                  </form>
-                </div>
-              </body>
-            </html>
-          `);
+                </head>
+                <body>
+                  ${fs.readFileSync('navbar.html')}
+                  <div class="container">
+                    <h1>API Gateway Configuration</h1>
+                    <form id="configForm" action="/configure" method="post">
+                      <div class="form-group">
+                        <label for="path">Path:</label>
+                        <input type="text" id="path" name="path" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="endpoint">API Endpoint:</label>
+                        <input type="text" id="endpoint" name="endpoint" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="bearerToken">Bearer Token (optional):</label>
+                        <input type="text" id="bearerToken" name="bearer_token">
+                      </div>
+                      <button type="submit" class="btn">Add Configuration</button>
+                    </form>
+                  </div>
+                </body>
+              </html>
+            `);
           } else if (!user) {
             // Admin user doesn't exist, render the create password page
             res.send(`
@@ -69,6 +75,7 @@ MongoClient.connect(mongoURL)
                   <link rel="stylesheet" type="text/css" href="/styles.css">
                 </head>
                 <body>
+                  ${fs.readFileSync('navbar.html')}
                   <div class="container">
                     <h1>Create Password</h1>
                     <p>Please create a password for the admin user.</p>
@@ -93,6 +100,7 @@ MongoClient.connect(mongoURL)
                   <link rel="stylesheet" type="text/css" href="/styles.css">
                 </head>
                 <body>
+                  ${fs.readFileSync('navbar.html')}
                   <div class="container">
                     <h1>Login</h1>
                     <form id="loginForm" action="/login" method="post">
@@ -118,6 +126,63 @@ MongoClient.connect(mongoURL)
         });
     });
             
+    app.get('/routes', (req, res) => {
+      console.log('GET /routes route');
+      if (req.session.user) {
+        // User is logged in, retrieve API configurations from MongoDB
+        api_configs_collection.find().toArray()
+          .then((apiConfigs) => {
+            // Render the routes page with the API configurations
+            try {
+              const html = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <title>API Routes</title>
+                <link rel="stylesheet" type="text/css" href="/styles.css">
+                <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+              </head>
+              <body>
+                ${fs.readFileSync('navbar.html')}
+                <div class="container">
+                  <h1>API Routes</h1>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Path</th>
+                        <th>Endpoint</th>
+                        <th>Bearer Token</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${apiConfigs.map((config, index) => `
+                        <tr class="${index % 2 === 0 ? 'even' : 'odd'}">
+                          <td>${config.path}</td>
+                          <td>${config.endpoint}</td>
+                          <td>${config.bearer_token || ''}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </body>
+              </html>
+              `;
+              res.send(html);
+            } catch (error) {
+              console.error('Error rendering routes page:', error);
+              res.status(500).send('Internal Server Error');
+            }
+          })
+          .catch((err) => {
+            console.error('Error retrieving API configurations:', err);
+            res.status(500).send('Internal Server Error');
+          });
+      } else {
+        // User is not logged in, redirect to the login page
+        res.redirect('/');
+      }
+    });
 
     app.post('/login', async (req, res) => {
     console.log('POST /login route');
@@ -146,6 +211,7 @@ MongoClient.connect(mongoURL)
                 <link rel="stylesheet" type="text/css" href="/styles.css">
               </head>
               <body>
+                ${fs.readFileSync('navbar.html')}
                 <div class="container">
                   <h1>Login</h1>
                   <p class="error-message">Invalid username or password</p>
@@ -242,4 +308,3 @@ MongoClient.connect(mongoURL)
     console.error('Failed to connect to MongoDB:', err);
     process.exit(1);
   });
-
