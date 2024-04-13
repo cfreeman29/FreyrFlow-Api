@@ -1,0 +1,2 @@
+# Ignore Python byte-compile cache
+__pycache__/
