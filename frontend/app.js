@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const secretKey = crypto.randomBytes(32).toString('hex');
 const fs = require('fs');
+const { ObjectId } = require('mongodb');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -183,6 +184,28 @@ MongoClient.connect(mongoURL)
         res.redirect('/');
       }
     });
+    
+    app.post('/delete-api', (req, res) => {
+      console.log('POST /delete-api route');
+      if (req.session.user) {
+        const { configId } = req.body;
+    
+        api_configs_collection.deleteOne({ _id: new ObjectId(configId) })
+          .then((result) => {
+            if (result.deletedCount === 1) {
+              res.json({ success: true, message: 'API configuration deleted successfully' });
+            } else {
+              res.json({ success: false, message: 'Failed to delete API configuration' });
+            }
+          })
+          .catch((err) => {
+            console.error('Error deleting API configuration:', err);
+            res.status(500).json({ success: false, message: 'An error occurred while deleting the API configuration' });
+          });
+      } else {
+        res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+    });
 
     app.get('/apis', (req, res) => {
       console.log('GET /apis route');
@@ -213,6 +236,7 @@ MongoClient.connect(mongoURL)
                         <th>Path</th>
                         <th>Endpoint</th>
                         <th>Bearer Token</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -222,7 +246,10 @@ MongoClient.connect(mongoURL)
                           <td>${config.endpoint}</td>
                           <td class="bearer-token-cell">
                             <span class="hidden-token">************</span>
-                            <span class="visible-token">${config.bearer_token || ''}</span>
+                           <span class="visible-token">${config.bearer_token || ''}</span>
+                          </td>
+                          <td>
+                            <button class="delete-btn" data-config-id="${config._id}">Delete</button>
                           </td>
                         </tr>
                       `).join('')}
@@ -243,6 +270,34 @@ MongoClient.connect(mongoURL)
                         token.classList.toggle('hidden');
                       });
                       toggleTokensBtn.textContent = toggleTokensBtn.textContent === 'Unhide Tokens' ? 'Hide Tokens' : 'Unhide Tokens';
+                    });
+                    
+                    const deleteButtons = document.querySelectorAll('.delete-btn');
+                    deleteButtons.forEach(function(button) {
+                      button.addEventListener('click', function() {
+                        const configId = this.getAttribute('data-config-id');
+                        
+                        fetch('/delete-api', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({ configId: configId })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                          if (result.success) {
+                            // Refresh the page or update the table dynamically
+                            location.reload();
+                          } else {
+                            alert('Failed to delete API configuration');
+                          }
+                        })
+                        .catch(error => {
+                          console.error('Error:', error);
+                          alert('An error occurred while deleting the API configuration');
+                        });
+                      });
                     });
                   });
                 </script>
