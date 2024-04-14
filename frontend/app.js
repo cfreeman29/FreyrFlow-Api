@@ -246,7 +246,7 @@ MongoClient.connect(mongoURL)
                           <td>${config.endpoint}</td>
                           <td class="bearer-token-cell">
                             <span class="hidden-token">************</span>
-                           <span class="visible-token">${config.bearer_token || ''}</span>
+                            <span class="visible-token">${config.bearer_token || ''}</span>
                           </td>
                           <td>
                             <button class="delete-btn" data-config-id="${config._id}">Delete</button>
@@ -255,13 +255,14 @@ MongoClient.connect(mongoURL)
                       `).join('')}
                     </tbody>
                   </table>
+                  <div id="successMessage" class="success-message hidden"></div>
                 </div>
                 <script>
                   document.addEventListener('DOMContentLoaded', function() {
                     const toggleTokensBtn = document.getElementById('toggleTokensBtn');
                     const hiddenTokens = document.querySelectorAll('.hidden-token');
                     const visibleTokens = document.querySelectorAll('.visible-token');
-    
+                    
                     toggleTokensBtn.addEventListener('click', function() {
                       hiddenTokens.forEach(function(token) {
                         token.classList.toggle('hidden');
@@ -272,31 +273,47 @@ MongoClient.connect(mongoURL)
                       toggleTokensBtn.textContent = toggleTokensBtn.textContent === 'Unhide Tokens' ? 'Hide Tokens' : 'Unhide Tokens';
                     });
                     
+                    // Step 3: Client-side JavaScript to handle delete functionality
                     const deleteButtons = document.querySelectorAll('.delete-btn');
+                    const successMessage = document.getElementById('successMessage');
+                    
                     deleteButtons.forEach(function(button) {
                       button.addEventListener('click', function() {
                         const configId = this.getAttribute('data-config-id');
+                        const confirmDelete = confirm('Are you sure you want to delete this API configuration?');
                         
-                        fetch('/delete-api', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json'
-                          },
-                          body: JSON.stringify({ configId: configId })
-                        })
-                        .then(response => response.json())
-                        .then(result => {
-                          if (result.success) {
-                            // Refresh the page or update the table dynamically
-                            location.reload();
-                          } else {
-                            alert('Failed to delete API configuration');
-                          }
-                        })
-                        .catch(error => {
-                          console.error('Error:', error);
-                          alert('An error occurred while deleting the API configuration');
-                        });
+                        if (confirmDelete) {
+                          fetch('/delete-api', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ configId: configId })
+                          })
+                          .then(response => response.json())
+                          .then(result => {
+                            if (result.success) {
+                              // Display success message
+                              successMessage.textContent = 'API configuration deleted successfully!';
+                              successMessage.classList.remove('hidden');
+                              
+                              // Hide success message after 3 seconds
+                              setTimeout(() => {
+                                successMessage.classList.add('hidden');
+                              }, 3000);
+                              
+                              // Remove the deleted row from the table
+                              const row = button.closest('tr');
+                              row.remove();
+                            } else {
+                              alert('Failed to delete API configuration');
+                            }
+                          })
+                          .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while deleting the API configuration');
+                          });
+                        }
                       });
                     });
                   });
