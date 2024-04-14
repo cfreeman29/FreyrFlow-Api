@@ -113,8 +113,8 @@ MongoClient.connect(mongoURL)
         });
     });
     
-    app.get('/configure-route', (req, res) => {
-      console.log('GET /configure-route route');
+    app.get('/configure-api', (req, res) => {
+      console.log('GET /configure-api route');
       if (req.session.user) {
         res.send(`
         <!DOCTYPE html>
@@ -151,8 +151,8 @@ MongoClient.connect(mongoURL)
       }
     });
 
-    app.get('/routes', (req, res) => {
-      console.log('GET /routes route');
+    app.get('/apis', (req, res) => {
+      console.log('GET /apis route');
       if (req.session.user) {
         // User is logged in, retrieve API configurations from MongoDB
         api_configs_collection.find().toArray()
