@@ -26,15 +26,20 @@ jobs:
       with:
         mongodb-version: '4.4'
 
-    - name: Install dependencies
+    - name: Install frontend dependencies
       run: |
+        cd frontend
         npm install
-        pip install -r requirements.txt
-
-    - name: Build and test app.js
+  
+    - name: Install backend dependencies
       run: |
+        pip install -r requirements.txt
+  
+    - name: Build and test frontend
+      run: |
+        cd frontend
         npm run build
         npm test
-
-    - name: Run Python app.py
+  
+    - name: Run backend tests
       run: python app.py
