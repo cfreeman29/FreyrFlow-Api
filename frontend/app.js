@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const secretKey = crypto.randomBytes(32).toString('hex');
 const fs = require('fs');
+const { ObjectId } = require('mongodb');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -117,37 +118,92 @@ MongoClient.connect(mongoURL)
       console.log('GET /configure-api route');
       if (req.session.user) {
         res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>API Gateway Configuration</title>
-            <link rel="stylesheet" type="text/css" href="/styles.css">
-          </head>
-          <body>
-            ${fs.readFileSync('navbar.html')}
-            <div class="container">
-              <h1>API Gateway Configuration</h1>
-              <form id="configForm" action="/configure" method="post">
-                <div class="form-group">
-                  <label for="path">Path:</label>
-                  <input type="text" id="path" name="path" required>
-                </div>
-                <div class="form-group">
-                  <label for="endpoint">API Endpoint:</label>
-                  <input type="text" id="endpoint" name="endpoint" required>
-                </div>
-                <div class="form-group">
-                  <label for="bearerToken">Bearer Token (optional):</label>
-                  <input type="text" id="bearerToken" name="bearer_token">
-                </div>
-                <button type="submit" class="btn">Add Configuration</button>
-              </form>
-            </div>
-          </body>
-        </html>
-      `);
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>API Gateway Configuration</title>
+              <link rel="stylesheet" type="text/css" href="/styles.css">
+            </head>
+            <body>
+              ${fs.readFileSync('navbar.html')}
+              <div class="container">
+                <h1>API Gateway Configuration</h1>
+                <form id="configForm" action="/configure" method="post">
+                  <div class="form-group">
+                    <label for="path">Path:</label>
+                    <input type="text" id="path" name="path" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="endpoint">API Endpoint:</label>
+                    <input type="text" id="endpoint" name="endpoint" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="bearerToken">Bearer Token (optional):</label>
+                    <input type="text" id="bearerToken" name="bearer_token">
+                  </div>
+                  <button type="submit" class="btn">Add Configuration</button>
+                </form>
+                <div id="successMessage" class="success-message hidden">API configuration added successfully!</div>
+              </div>
+              <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                  const configForm = document.getElementById('configForm');
+                  const successMessage = document.getElementById('successMessage');
+    
+                  configForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+    
+                    const formData = new FormData(configForm);
+                    const data = Object.fromEntries(formData.entries());
+    
+                    fetch('/configure', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                      successMessage.classList.remove('hidden');
+                      configForm.reset();
+                      setTimeout(() => {
+                        successMessage.classList.add('hidden');
+                      }, 3000);
+                    })
+                    .catch(error => {
+                      console.error('Error:', error);
+                    });
+                  });
+                });
+              </script>
+            </body>
+          </html>
+        `);
       } else {
         res.redirect('/');
+      }
+    });
+    
+    app.post('/delete-api', (req, res) => {
+      console.log('POST /delete-api route');
+      if (req.session.user) {
+        const { configId } = req.body;
+    
+        api_configs_collection.deleteOne({ _id: new ObjectId(configId) })
+          .then((result) => {
+            if (result.deletedCount === 1) {
+              res.json({ success: true, message: 'API configuration deleted successfully' });
+            } else {
+              res.json({ success: false, message: 'Failed to delete API configuration' });
+            }
+          })
+          .catch((err) => {
+            console.error('Error deleting API configuration:', err);
+            res.status(500).json({ success: false, message: 'An error occurred while deleting the API configuration' });
+          });
+      } else {
+        res.status(401).json({ success: false, message: 'Unauthorized' });
       }
     });
 
@@ -180,6 +236,7 @@ MongoClient.connect(mongoURL)
                         <th>Path</th>
                         <th>Endpoint</th>
                         <th>Bearer Token</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -191,17 +248,21 @@ MongoClient.connect(mongoURL)
                             <span class="hidden-token">************</span>
                             <span class="visible-token">${config.bearer_token || ''}</span>
                           </td>
+                          <td>
+                            <button class="delete-btn" data-config-id="${config._id}">Delete</button>
+                          </td>
                         </tr>
                       `).join('')}
                     </tbody>
                   </table>
+                  <div id="successMessage" class="success-message hidden"></div>
                 </div>
                 <script>
                   document.addEventListener('DOMContentLoaded', function() {
                     const toggleTokensBtn = document.getElementById('toggleTokensBtn');
                     const hiddenTokens = document.querySelectorAll('.hidden-token');
                     const visibleTokens = document.querySelectorAll('.visible-token');
-    
+                    
                     toggleTokensBtn.addEventListener('click', function() {
                       hiddenTokens.forEach(function(token) {
                         token.classList.toggle('hidden');
@@ -210,6 +271,50 @@ MongoClient.connect(mongoURL)
                         token.classList.toggle('hidden');
                       });
                       toggleTokensBtn.textContent = toggleTokensBtn.textContent === 'Unhide Tokens' ? 'Hide Tokens' : 'Unhide Tokens';
+                    });
+                    
+                    // Step 3: Client-side JavaScript to handle delete functionality
+                    const deleteButtons = document.querySelectorAll('.delete-btn');
+                    const successMessage = document.getElementById('successMessage');
+                    
+                    deleteButtons.forEach(function(button) {
+                      button.addEventListener('click', function() {
+                        const configId = this.getAttribute('data-config-id');
+                        const confirmDelete = confirm('Are you sure you want to delete this API configuration?');
+                        
+                        if (confirmDelete) {
+                          fetch('/delete-api', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ configId: configId })
+                          })
+                          .then(response => response.json())
+                          .then(result => {
+                            if (result.success) {
+                              // Display success message
+                              successMessage.textContent = 'API configuration deleted successfully!';
+                              successMessage.classList.remove('hidden');
+                              
+                              // Hide success message after 3 seconds
+                              setTimeout(() => {
+                                successMessage.classList.add('hidden');
+                              }, 3000);
+                              
+                              // Remove the deleted row from the table
+                              const row = button.closest('tr');
+                              row.remove();
+                            } else {
+                              alert('Failed to delete API configuration');
+                            }
+                          })
+                          .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while deleting the API configuration');
+                          });
+                        }
+                      });
                     });
                   });
                 </script>
