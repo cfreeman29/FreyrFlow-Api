@@ -41,7 +41,11 @@ jobs:
         node app.js &
   
     - name: Run backend tests
-      run: python app.py
+      run: | 
+        nohup python app.py &
+    
+    - name: Wait for applications to start
+      run: sleep 10 # Adjust the sleep time if needed
 
     - name: Check webserver on port 8001
       run: |
