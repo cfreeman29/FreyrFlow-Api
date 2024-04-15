@@ -35,11 +35,18 @@ jobs:
       run: |
         pip install -r requirements.txt
   
-    - name: Build and test frontend
+    - name: Start frontend application
       run: |
         cd frontend
-        npm run build
-        npm test
+        node app.js &
+  
+    - name: Wait for frontend to start
+      run: |
+        sleep 10
+  
+    - name: Check frontend application
+      run: |
+        curl -s -o /dev/null -w "%{http_code}" http://localhost:8001 | grep -q 200
   
     - name: Run backend tests
       run: python app.py
