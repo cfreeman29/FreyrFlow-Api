@@ -8,6 +8,11 @@ const crypto = require('crypto');
 const secretKey = crypto.randomBytes(32).toString('hex');
 const fs = require('fs');
 const { ObjectId } = require('mongodb');
+require('dotenv').config({ path: '../.env' });
+
+const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_DB = process.env.MONGODB_DB;
+const MONGODB_COLLECTION = process.env.MONGODB_COLLECTION;
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -20,15 +25,15 @@ app.use(session({
 }));
 
 // MongoDB connection URL
-const mongoURL = 'mongodb://localhost:3101';
+const mongoURL = MONGODB_URI;
 
 // Connect to MongoDB
 MongoClient.connect(mongoURL)
   .then((client) => {
     console.log('Connected to MongoDB');
-    const db = client.db('api_gateway');
+    const db = client.db(MONGODB_DB);
     const usersCollection = db.collection('users');
-    const api_configs_collection = db.collection('api_configs');
+    const api_configs_collection = db.collection(MONGODB_COLLECTION);
 
     app.get('/', (req, res) => {
       console.log('GET / route');
