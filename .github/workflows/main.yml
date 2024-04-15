@@ -1,0 +1,38 @@
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20.12.0'
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11.4'
+
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@1.3.0
+      with:
+        mongodb-version: '4.4'
+
+    - name: Install dependencies
+      run: |
+        npm install
+        pip install -r requirements.txt
+
+    - name: Build and test app.js
+      run: |
+        npm run build
+        npm test
+
+    - name: Run Python app.py
+      run: python app.py
