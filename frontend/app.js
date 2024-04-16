@@ -446,7 +446,7 @@ MongoClient.connect(mongoURL)
     if (req.session.user) {
       const { path, endpoint, bearer_token } = req.body;
 
-      axios.post(backendURL, {
+      axios.post(backendURL+'/configure', {
         path,
         endpoint,
         bearer_token
