@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const session = require('express-session');
 const MongoClient = require('mongodb').MongoClient;
+const MongoStore = require('connect-mongo');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const secretKey = crypto.randomBytes(32).toString('hex');
@@ -10,6 +11,7 @@ const fs = require('fs');
 const { ObjectId } = require('mongodb');
 require('dotenv').config({ path: '../.env' });
 
+const backendURL = process.env.BACKEND_URL;
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB = process.env.MONGODB_DB;
 const MONGODB_COLLECTION = process.env.MONGODB_COLLECTION;
@@ -18,14 +20,25 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
-app.use(session({
-  secret: secretKey,
-  resave: false,
-  saveUninitialized: false
-}));
 
 // MongoDB connection URL
 const mongoURL = MONGODB_URI;
+
+
+app.use(session({
+  secret: secretKey,
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+      mongoUrl: mongoURL,
+      collectionName: 'sessions'
+  }),
+  cookie: {
+      secure: false, // set to true if you're using HTTPS
+      httpOnly: true, // Minimize risk of XSS attacks by restricting the client from reading the cookie
+      maxAge: 1000 * 60 * 60 * 24 // e.g., 1 day
+  }
+}));
 
 // Connect to MongoDB
 MongoClient.connect(mongoURL)
@@ -433,7 +446,7 @@ MongoClient.connect(mongoURL)
     if (req.session.user) {
       const { path, endpoint, bearer_token } = req.body;
 
-      axios.post('http://localhost:3000/configure', {
+      axios.post(backendURL+'/configure', {
         path,
         endpoint,
         bearer_token
@@ -453,7 +466,7 @@ MongoClient.connect(mongoURL)
 
   console.log('Starting server...');
 
-    app.listen(8001, (err) => {
+    app.listen(8000, (err) => {
       if (err) {
         console.error('Error starting the server:', err);
         process.exit(1);
