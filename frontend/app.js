@@ -263,7 +263,7 @@ MongoClient.connect(mongoURL)
                           <td>${config.path}</td>
                           <td>${config.endpoint}</td>
                           <td class="bearer-token-cell">
-                            <span class="hidden-token">************</span>
+                            <span class="hidden-token">*************</span>
                             <span class="visible-token">${config.bearer_token || ''}</span>
                           </td>
                           <td>
