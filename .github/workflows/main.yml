@@ -1,6 +1,8 @@
 name: Test App
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -40,10 +42,13 @@ jobs:
     - name: Build and start frontend
       working-directory: ./frontend
       env:
+        MONGODB_URI: mongodb://localhost:27017
+        MONGODB_DB: api_gateway
+        MONGODB_COLLECTION: api_configs
         BACKEND_URL: http://backend:3000
       run: |
         docker build -t frontend .
-        docker run -d --name frontend -p 8080:8080 --link backend frontend
+        docker run -d --name frontend -p 8080:8080 frontend
 
     - name: Run tests
       run: |
