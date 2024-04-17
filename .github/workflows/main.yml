@@ -1,0 +1,57 @@
+name: Test App
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.12.0'
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@1.9.0
+      with:
+        mongodb-version: latest
+
+    - name: Build and start backend
+      working-directory: ./backend
+      env:
+        MONGODB_URI: mongodb://localhost:27017
+        MONGODB_DB: api_gateway
+        MONGODB_COLLECTION: api_configs
+      run: |
+        docker build -t backend .
+        docker run -d --name backend -p 3000:3000 backend
+
+    - name: Build and start frontend
+      working-directory: ./frontend
+      env:
+        BACKEND_URL: http://backend:3000
+      run: |
+        docker build -t frontend .
+        docker run -d --name frontend -p 8080:8080 --link backend frontend
+
+    - name: Run tests
+      run: |
+        # Add your test commands here
+        # For example: npm test or pytest
+
+    - name: Cleanup
+      if: always()
+      run: |
+        docker stop backend frontend
+        docker rm backend frontend
