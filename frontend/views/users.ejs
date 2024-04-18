@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Users</title>
+  <link rel="stylesheet" type="text/css" href="/styles.css">
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .modal-header {
+      margin-bottom: 20px;
+    }
+
+    .modal-footer {
+      margin-top: 20px;
+      text-align: right;
+    }
+
+    .btn-create {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn-create:hover {
+      background-color: #45a049;
+    }
+
+    .delete-btn {
+      padding: 6px 12px;
+      background-color: #f44336;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background-color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <%- include('navbar') %>
+  <div class="container">
+    <h1>Users</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach((user) => { %>
+          <tr>
+            <td><%= user.username %></td>
+            <td>
+              <button class="delete-btn" data-user-id="<%= user._id %>">Delete</button>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <button id="createUserBtn" class="btn">Create User</button>
+  </div>
+
+  <div id="createUserModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create User</h2>
+        <span class="close">&times;</span>
+      </div>
+      <form id="createUserForm" action="/create-user" method="post">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn-create">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var modal = document.getElementById("createUserModal");
+      var btn = document.getElementById("createUserBtn");
+      var span = document.getElementsByClassName("close")[0];
+
+      btn.onclick = function() {
+        modal.style.display = "block";
+      }
+
+      span.onclick = function() {
+        modal.style.display = "none";
+      }
+
+      window.onclick = function(event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      }
+
+      var createUserForm = document.getElementById('createUserForm');
+      createUserForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        var username = document.getElementById('username').value;
+        var password = document.getElementById('password').value;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/create-user');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            var response = JSON.parse(xhr.responseText);
+            if (response.success) {
+              modal.style.display = "none";
+              location.reload(); // Refresh the user list
+            } else {
+              alert(response.message);
+           }
+         } else {
+           alert('An error occurred while creating the user.');
+          }
+       };
+       xhr.send(JSON.stringify({ username: username, password: password }));
+      });
+
+      var deleteButtons = document.getElementsByClassName('delete-btn');
+      Array.from(deleteButtons).forEach(function(button) {
+        button.addEventListener('click', function() {
+          var userId = this.getAttribute('data-user-id');
+          var confirmDelete = confirm('Are you sure you want to delete this user?');
+
+          if (confirmDelete) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/delete-user');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function() {
+              if (xhr.status === 200) {
+                location.reload(); // Refresh the user list
+              }
+            };
+            xhr.send(JSON.stringify({ userId: userId }));
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

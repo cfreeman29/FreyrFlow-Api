@@ -1,0 +1,16 @@
+<nav class="navbar">
+  <ul>
+    <div class="left-items">
+      <li><a href="/">Home</a></li>
+      <li><a href="/users">Users</a></li>
+      <li><a href="/configure-api">Configure API</a></li>
+      <li><a href="/apis">API List</a></li>
+    </div>
+    <div class="right-items">
+      <% if (user) { %>
+        <li class="username"><%= user.username %></li>
+        <li><a href="/logout">Logout</a></li>
+      <% } %>
+    </div>
+  </ul>
+</nav>
