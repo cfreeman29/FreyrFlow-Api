@@ -221,6 +221,24 @@ tr:hover {
   display: none;
 }
 
+.actions-cell {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.toggle-btn {
+  padding: 6px 12px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 5px;
+  flex: 1;
+}
+
 .delete-btn {
   padding: 6px 12px;
   background-color: #f44336;
@@ -229,6 +247,12 @@ tr:hover {
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
+  margin-right: 5px;
+  flex: 1;
+}
+
+.toggle-btn:hover {
+  background-color: #45a049;
 }
 
 .delete-btn:hover {

@@ -9,7 +9,6 @@
   <div class="container">
     <div class="header">
       <h1>API Routes</h1>
-      <button id="toggleTokensBtn">Unhide Tokens</button>
     </div>
     <table>
       <thead>
@@ -17,19 +16,20 @@
           <th>Path</th>
           <th>Endpoint</th>
           <th>Bearer Token</th>
-          <th>Action</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <% apiConfigs.forEach((config, index) => { %>
-          <tr class="<%= index % 2 === 0 ? 'even' : 'odd' %>">
+        <% apiConfigs.forEach((config) => { %>
+          <tr>
             <td><%= config.path %></td>
             <td><%= config.endpoint %></td>
-            <td class="bearer-token-cell">
-              <span class="hidden-token">*************</span>
-              <span class="visible-token"><%= config.bearer_token || '' %></span>
-            </td>
             <td>
+              <span class="hidden-token" data-config-id="<%= config._id %>">*************</span>
+              <span class="visible-token" data-config-id="<%= config._id %>" style="display: none;"><%= config.bearer_token || '' %></span>
+            </td>
+            <td class="actions-cell">
+              <button class="toggle-btn" data-config-id="<%= config._id %>">Show Token</button>
               <button class="delete-btn" data-config-id="<%= config._id %>">Delete</button>
             </td>
           </tr>
@@ -40,18 +40,25 @@
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const toggleTokensBtn = document.getElementById('toggleTokensBtn');
-      const hiddenTokens = document.querySelectorAll('.hidden-token');
-      const visibleTokens = document.querySelectorAll('.visible-token');
+      // Client-side JavaScript to handle toggle functionality
+      const toggleButtons = document.querySelectorAll('.toggle-btn');
       
-      toggleTokensBtn.addEventListener('click', function() {
-        hiddenTokens.forEach(function(token) {
-          token.classList.toggle('hidden');
+      toggleButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+          const configId = this.getAttribute('data-config-id');
+          const hiddenToken = document.querySelector(`.hidden-token[data-config-id="${configId}"]`);
+          const visibleToken = document.querySelector(`.visible-token[data-config-id="${configId}"]`);
+          
+          if (hiddenToken.style.display === 'none') {
+            hiddenToken.style.display = 'inline';
+            visibleToken.style.display = 'none';
+            this.textContent = 'Show Token';
+          } else {
+            hiddenToken.style.display = 'none';
+            visibleToken.style.display = 'inline';
+            this.textContent = 'Hide Token';
+          }
         });
-        visibleTokens.forEach(function(token) {
-          token.classList.toggle('hidden');
-        });
-        toggleTokensBtn.textContent = toggleTokensBtn.textContent === 'Unhide Tokens' ? 'Hide Tokens' : 'Unhide Tokens';
       });
       
       // Client-side JavaScript to handle delete functionality
