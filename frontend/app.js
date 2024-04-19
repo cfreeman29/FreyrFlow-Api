@@ -10,7 +10,7 @@ const secretKey = crypto.randomBytes(32).toString('hex');
 const { ObjectId } = require('mongodb');
 const ejs = require('ejs');
 
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config({ path: '../.env', override: true });
 
 const backendURL = process.env.BACKEND_URL;
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -86,11 +86,11 @@ MongoClient.connect(mongoURL)
       console.log('POST /delete-api route');
       if (req.session.user) {
         const { configId } = req.body;
-
+    
         api_configs_collection.deleteOne({ _id: new ObjectId(configId) })
           .then((result) => {
             if (result.deletedCount === 1) {
-              res.json({ success: true, message: 'API configuration deleted successfully' });
+              res.json({ success: true });
             } else {
               res.json({ success: false, message: 'Failed to delete API configuration' });
             }
@@ -186,8 +186,12 @@ MongoClient.connect(mongoURL)
         // User is logged in, retrieve API configurations from MongoDB
         api_configs_collection.find().toArray()
           .then((apiConfigs) => {
-            // Render the apis page with the API configurations and the user object
-            res.render('apis', { apiConfigs, user: req.session.user });
+            // Render the apis page with the API configurations, user object, and deleteSuccess variable
+            res.render('apis', {
+              apiConfigs,
+              user: req.session.user,
+              deleteSuccess: req.query.deleteSuccess === 'true'
+            });
           })
           .catch((err) => {
             console.error('Error retrieving API configurations:', err);
